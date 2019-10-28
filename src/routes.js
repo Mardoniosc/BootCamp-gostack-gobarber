@@ -5,7 +5,7 @@ import multerConfig from './config/multer';
 import UserController from './app/controller/UserController';
 import SessionController from './app/controller/SessionController';
 import FileController from './app/controller/FileController';
-import AppointmentController from './app/controller/Appointment';
+import AppointmentController from './app/controller/AppointmentController';
 import ProviderController from './app/controller/ProviderController';
 import authMiddlewares from './app/middlewares/auth';
 
