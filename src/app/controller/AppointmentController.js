@@ -1,5 +1,5 @@
 import * as Yup from 'yup';
-import { startOfHour, parseISO, isBefore, format } from 'date-fns';
+import { startOfHour, parseISO, isBefore, format, subHours } from 'date-fns';
 import pt from 'date-fns/locale/pt';
 
 import Appointment from '../models/Appointment';
@@ -90,6 +90,11 @@ class AppointmentController {
         .json({ error: 'Horário não está disponivel para agendamento' });
     }
 
+    if (req.userId === provider_id) {
+      return res
+        .status(401)
+        .json({ error: 'Usuário não pode agendar horario com si mesmo!' });
+    }
     const appointment = await Appointment.create({
       user_id: req.userId,
       provider_id,
@@ -110,6 +115,31 @@ class AppointmentController {
       content: `Novo agendamento de ${user.nome} para ${formattedDate}`,
       user: provider_id,
     });
+    return res.json(appointment);
+  }
+
+  async delete(req, res) {
+    const appointment = await Appointment.findByPk(req.params.id);
+
+    if (appointment.user_id !== req.userId) {
+      return res.status(401).json({
+        error: 'Você não tem permissão para cancelar este agendamento!',
+      });
+    }
+
+    const dateWithSub = subHours(appointment.date, 2);
+
+    if (isBefore(dateWithSub, new Date())) {
+      return res.status(401).json({
+        error:
+          'Você não pode cancelar o agendamento com menos de 2h do horário marcado',
+      });
+    }
+
+    appointment.canceled_at = new Date();
+
+    await appointment.save();
+
     return res.json(appointment);
   }
 }
